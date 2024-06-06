@@ -1,34 +1,14 @@
-"use client";
+import Prompt from "@models/prompt";
+import { connectToDB } from "@utils/database";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+export const GET = async (request, { params }) => {
+    try {
+        await connectToDB()
 
-import Profile from "@components/Profile";
+        const prompts = await Prompt.find({ creator: params.id }).populate("creator")
 
-const UserProfile = ({ params }) => {
-  const searchParams = useSearchParams();
-  const userName = searchParams.get("name");
-
-  const [userPosts, setUserPosts] = useState([]);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const response = await fetch(`/api/users/${params?.id}/posts`);
-      const data = await response.json();
-
-      setUserPosts(data);
-    };
-
-    if (params?.id) fetchPosts();
-  }, [params.id]);
-
-  return (
-    <Profile
-      name={userName}
-      desc={`Welcome to ${userName}'s personalized profile page. Explore ${userName}'s exceptional prompts and be inspired by the power of their imagination`}
-      data={userPosts}
-    />
-  );
-};
-
-export default UserProfile;
+        return new Response(JSON.stringify(prompts), { status: 200 })
+    } catch (error) {
+        return new Response("Failed to fetch prompts created by user", { status: 500 })
+    }
+} 
